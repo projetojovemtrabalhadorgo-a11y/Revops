@@ -29,7 +29,7 @@ import {
 export default function App() {
   // Input states pre-populated for a fantastic first-use experience
   const [funnelMetrics, setFunnelMetrics] = useState<ChannelMetric[]>(SAMPLE_FUNNEL_DATA);
-  const [clientList, setClientList] = useState<string[]>(SAMPLE_CLIENT_LIST);
+  const [clientList, setClientList] = useState<string[]>([]);
 
   // Results states
   const [loading, setLoading] = useState(false);

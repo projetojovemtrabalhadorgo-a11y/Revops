@@ -18,7 +18,18 @@ export default function ClientListInput({
 
   // Keep textValue in sync with parent state changes (like load/clear)
   useEffect(() => {
-    setTextValue(clientList.join("\n"));
+    const currentParsed = textValue
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    const isSynced =
+      currentParsed.length === clientList.length &&
+      currentParsed.every((val, i) => val === clientList[i]);
+
+    if (!isSynced) {
+      setTextValue(clientList.join("\n"));
+    }
   }, [clientList]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
