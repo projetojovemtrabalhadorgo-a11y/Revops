@@ -8,6 +8,7 @@ import MarkdownReport from "./components/MarkdownReport";
 import MetricsSummaryCards from "./components/MetricsSummaryCards";
 import IcpProfilePanel from "./components/IcpProfilePanel";
 import ActionPlanPanel from "./components/ActionPlanPanel";
+import { generateRevOpsPDF } from "./utils/pdfGenerator";
 
 import {
   Flame,
@@ -23,7 +24,8 @@ import {
   Target,
   ArrowRight,
   ChevronRight,
-  Info
+  Info,
+  FileDown
 } from "lucide-react";
 
 export default function App() {
@@ -103,7 +105,22 @@ export default function App() {
         }),
       });
 
-      const data = await response.json();
+      let data: any;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (jsonErr) {
+          throw new Error("O servidor retornou um JSON malformado. Verifique se o backend está respondendo corretamente.");
+        }
+      } else {
+        const textResponse = await response.text();
+        console.error("Non-JSON Response received:", textResponse);
+        if (response.status === 404) {
+          throw new Error("O servidor backend de inteligência não foi encontrado (Erro 404). Se você exportou o app para uma plataforma estática (como Vercel/GitHub Pages), lembre-se de que este é um aplicativo Full-Stack que necessita de um servidor Node.js (Express) ativo para rodar a IA do Gemini.");
+        }
+        throw new Error(`O servidor retornou uma resposta inválida (Status ${response.status}). Verifique se a sua chave de API GEMINI_API_KEY está configurada corretamente no painel lateral de Secrets no Google AI Studio.`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Ocorreu um erro ao gerar o relatório.");
@@ -376,6 +393,28 @@ export default function App() {
                     <p className="text-xs text-slate-400 leading-relaxed mb-4">
                       Abaixo, veja o gráfico de conversão calculado localmente com base nos seus dados atuais de métricas. Para cruzar esses números com o perfil dos clientes e receber insights estratégicos de receita, clique no botão <strong className="text-orange-400">🔥 Rodar Inteligência RevOps</strong>.
                     </p>
+                  </div>
+                )}
+
+                {/* PDF Generation and Export Panel */}
+                {analysisResult && (
+                  <div className="bg-gradient-to-r from-orange-950/25 via-amber-950/15 to-[#0b0c0d] border border-orange-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg animate-fade-in" id="pdf-download-bar">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-orange-500/10 p-2 rounded-lg border border-orange-500/20">
+                        <FileDown className="w-5 h-5 text-orange-400 animate-bounce" />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Exportar Relatório Completo</h4>
+                        <p className="text-[11px] text-slate-400">Baixe um arquivo PDF de alta fidelidade com os canais, perfil ICP e planos de ação comercial.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => generateRevOpsPDF(analysisResult, funnelMetrics, clientList)}
+                      className="w-full sm:w-auto bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold py-2.5 px-5 rounded-lg flex items-center justify-center gap-2 shadow-md hover:shadow-orange-500/20 transition-all cursor-pointer font-sans"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      <span>Gerar PDF Completo</span>
+                    </button>
                   </div>
                 )}
 
