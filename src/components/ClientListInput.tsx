@@ -15,22 +15,28 @@ export default function ClientListInput({
   onClear,
 }: ClientListInputProps) {
   const [textValue, setTextValue] = useState("");
-  const lastParsedRef = useRef<string[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Keep textValue in sync with parent state changes (like load/clear/remove)
   useEffect(() => {
+    if (isFocused) return; // Do not overwrite while actively typing
+
     const list = Array.isArray(clientList) ? clientList : [];
     
-    // Check if the current clientList matches what was parsed last
+    // Check if the current clientList matches what was parsed last from the text
+    const currentTextParsed = textValue
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
     const isSynced =
-      list.length === lastParsedRef.current.length &&
-      list.every((val, i) => val === lastParsedRef.current[i]);
+      list.length === currentTextParsed.length &&
+      list.every((val, i) => val === currentTextParsed[i]);
 
     if (!isSynced) {
       setTextValue(list.join("\n"));
-      lastParsedRef.current = list;
     }
-  }, [clientList]);
+  }, [clientList, isFocused]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value || "";
@@ -42,14 +48,12 @@ export default function ClientListInput({
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
     
-    lastParsedRef.current = parsed;
     onChange(parsed);
   };
 
   const removeClientTag = (index: number) => {
     const list = Array.isArray(clientList) ? clientList : [];
     const updated = list.filter((_, i) => i !== index);
-    lastParsedRef.current = updated;
     onChange(updated);
     setTextValue(updated.join("\n"));
   };
@@ -102,6 +106,8 @@ export default function ClientListInput({
             <textarea
               value={textValue}
               onChange={handleTextChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               placeholder="Ex:&#10;https://www.google.com&#10;Pipedrive CRM&#10;RD Station"
               rows={5}
               className="w-full h-full min-h-[120px] text-xs font-mono bg-[#050505] border border-white/10 focus:border-orange-500 focus:outline-none text-slate-200 p-2.5 rounded focus:ring-1 focus:ring-orange-500/20 resize-none transition-all"
