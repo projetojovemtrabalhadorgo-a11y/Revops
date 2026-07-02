@@ -1,0 +1,6 @@
+{
+  "name": "RevOps On Fire",
+  "description": "Hub de inteligência de vendas B2B e análise avançada de funil com IA para RevOps, definição de ICP e geração de planos de ação comerciais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
