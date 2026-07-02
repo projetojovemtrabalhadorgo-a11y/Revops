@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link2, Trash2, Sparkles, AlertCircle, RefreshCw, Layers } from "lucide-react";
 
 interface ClientListInputProps {
@@ -15,21 +15,20 @@ export default function ClientListInput({
   onClear,
 }: ClientListInputProps) {
   const [textValue, setTextValue] = useState("");
+  const lastParsedRef = useRef<string[]>([]);
 
   // Keep textValue in sync with parent state changes (like load/clear/remove)
   useEffect(() => {
     const list = Array.isArray(clientList) ? clientList : [];
-    const currentTextParsed = textValue
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
+    
+    // Check if the current clientList matches what was parsed last
     const isSynced =
-      currentTextParsed.length === list.length &&
-      currentTextParsed.every((val, i) => val === list[i]);
+      list.length === lastParsedRef.current.length &&
+      list.every((val, i) => val === lastParsedRef.current[i]);
 
     if (!isSynced) {
       setTextValue(list.join("\n"));
+      lastParsedRef.current = list;
     }
   }, [clientList]);
 
@@ -43,12 +42,14 @@ export default function ClientListInput({
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
     
+    lastParsedRef.current = parsed;
     onChange(parsed);
   };
 
   const removeClientTag = (index: number) => {
     const list = Array.isArray(clientList) ? clientList : [];
     const updated = list.filter((_, i) => i !== index);
+    lastParsedRef.current = updated;
     onChange(updated);
     setTextValue(updated.join("\n"));
   };
